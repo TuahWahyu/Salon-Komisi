@@ -136,7 +136,7 @@ function formatTanggal(tanggal){
 
     const t = new Date(tanggal);
 
-    return t.toLocaleDateString("id-ID",{
+    return t.toLocaleString("id-ID",{
         day:"2-digit",
         month:"2-digit",
         year:"numeric"
@@ -267,7 +267,6 @@ totalKomisi += item.komisi;
                     <td>${formatRupiah(item.komisi)}</td>
                 </tr>
             `;
-
         });
 
        document.getElementById("todaySales").innerHTML =
