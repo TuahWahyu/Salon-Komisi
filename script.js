@@ -132,6 +132,18 @@ return "Rp "+angka.toLocaleString("id-ID");
 
 }
 
+function formatTanggal(tanggal){
+
+    const t = new Date(tanggal);
+
+    return t.toLocaleDateString("id-ID",{
+        day:"2-digit",
+        month:"2-digit",
+        year:"numeric"
+    });
+
+}
+
 function renderKomisiPerKaryawan(data){
 
     const komisiBody = document.getElementById("komisiBody");
