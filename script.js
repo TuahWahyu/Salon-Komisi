@@ -265,17 +265,6 @@ totalKomisi += item.komisi;
                     <td>${formatRupiah(item.harga)}</td>
                     <td>${item.persen}%</td>
                     <td>${formatRupiah(item.komisi)}</td>
-                    function formatTanggal(tanggal){
-
-    const t = new Date(tanggal);
-
-    return t.toLocaleDateString("id-ID",{
-        day:"2-digit",
-        month:"2-digit",
-        year:"numeric"
-    });
-
-}
                 </tr>
             `;
 
