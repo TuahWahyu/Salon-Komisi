@@ -1,272 +1,335 @@
-//==============================
-// MASTER DATA TREATMENT
-//==============================
-const API_URL="https://script.google.com/macros/s/AKfycbzP3HxF0FUADvYwrNEvwZwIvffYak8CNIGxlMwWX44Evip52C6743PuRw6mS_MiVZ0v3Q/exec";
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
 
-//==============================
+body{
+    background:#fff6fb;
+    color:#444;
+    padding:20px;
+}
 
-const treatment = document.getElementById("treatment");
+/* HEADER */
 
-const harga = document.getElementById("harga");
+header{
+    background:#ffd6e7;
+    padding:20px;
+    border-radius:12px;
+    text-align:center;
+    margin-bottom:20px;
+}
 
-const persen = document.getElementById("persen");
+header h1{
+    color:#d63384;
+    margin-bottom:8px;
+}
 
-const form = document.getElementById("transactionForm");
+header p{
+    color:#555;
+}
 
-const tableBody = document.getElementById("tableBody");
+/* DASHBOARD */
 
-//==============================
+.dashboard{
 
-let omzetHari = 0;
+    display:grid;
 
-let omzetBulan = 0;
+    grid-template-columns:
+    repeat(auto-fit,minmax(220px,1fr));
 
-let totalKomisi = 0;
+    gap:15px;
 
-//==============================
-
-//==============================
-
-form.addEventListener("submit",function(e){
-
-e.preventDefault();
-
-const tanggal=document.getElementById("tanggal").value;
-
-const nama=document.getElementById("karyawan").value;
-
-const namaTreatment=treatment.value;
-
-const nilaiHarga=parseInt(harga.value);
-
-const nilaiPersen=parseFloat(persen.value);
-
-const komisi=(nilaiHarga*nilaiPersen)/100;
-
-const transaksi={
-
-tanggal:tanggal,
-
-karyawan:nama,
-
-treatment:namaTreatment,
-
-harga:nilaiHarga,
-
-persen:nilaiPersen,
-
-komisi:komisi
-
-};
-
-//==============================
-
-document.getElementById("hasilNama").innerHTML=nama;
-
-document.getElementById("hasilOmzet").innerHTML=formatRupiah(nilaiHarga);
-
-document.getElementById("hasilKomisi").innerHTML=formatRupiah(komisi);
-
-//==============================
-
-
-
-//==============================
-
-document.getElementById("todaySales").innerHTML=formatRupiah(omzetHari);
-
-document.getElementById("monthSales").innerHTML=formatRupiah(omzetBulan);
-
-document.getElementById("totalCommission").innerHTML=formatRupiah(totalKomisi);
-
-//==============================
-
-const row=`
-
-<tr>
-
-<td>${tanggal}</td>
-
-<td>${nama}</td>
-
-<td>${namaTreatment}</td>
-
-<td>${formatRupiah(nilaiHarga)}</td>
-
-<td>${nilaiPersen}%</td>
-
-<td>${formatRupiah(komisi)}</td>
-
-</tr>
-
-`;
-
-
-fetch(API_URL,{
-
-method:"POST",
-
-body:JSON.stringify(transaksi)
-
-})
-.then(res=>res.json())
-.then(data=>{
-
-    form.reset();
-
-    document.getElementById("tanggal").valueAsDate = new Date();
-
-    loadData();
-
-    alert("Transaksi berhasil disimpan.");
-
-});
-
-});
-
-//==============================
-
-function formatRupiah(angka){
-
-return "Rp "+angka.toLocaleString("id-ID");
+    margin-bottom:25px;
 
 }
 
-function renderKomisiPerKaryawan(data){
+.card{
 
-    const komisiBody = document.getElementById("komisiBody");
+    background:white;
 
-    komisiBody.innerHTML = "";
+    border-radius:12px;
 
-    const rekap = {};
+    padding:20px;
 
-    data.forEach(item=>{
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
 
-        if(!rekap[item.karyawan]){
-
-            rekap[item.karyawan]=0;
-
-        }
-
-        rekap[item.karyawan]+=item.komisi;
-
-    });
-
-    Object.keys(rekap).forEach(nama=>{
-
-        komisiBody.innerHTML+=`
-
-        <tr>
-
-            <td>${nama}</td>
-
-            <td>${formatRupiah(rekap[nama])}</td>
-
-        </tr>
-
-        `;
-
-    });
+    text-align:center;
 
 }
 
-async function loadData(){
+.card h2{
 
-    try{
+    font-size:18px;
 
-        const response = await fetch(API_URL);
+    margin-bottom:10px;
 
-        const result = await response.json();
-
-        const data = result.transaksi;
-
-        const selectKaryawan = document.getElementById("karyawan");
-
-selectKaryawan.innerHTML =
-'<option value="">Pilih Karyawan</option>';
-
-result.karyawan.forEach(item=>{
-
-    selectKaryawan.innerHTML +=
-    `<option value="${item.nama}">
-        ${item.nama}
-    </option>`;
-
-});
-
-        tableBody.innerHTML = "";
-
-        omzetHari = 0;
-        omzetBulan = 0;
-        totalKomisi = 0;
-
-        data.forEach(item=>{
-
-            const hariIni = new Date();
-
-const tanggalTransaksi = new Date(item.tanggal);
-
-if (
-    tanggalTransaksi.toDateString() ===
-    hariIni.toDateString()
-){
-
-    omzetHari += item.harga;
+    color:#d63384;
 
 }
 
-if (
+.card h3{
 
-    tanggalTransaksi.getMonth() === hariIni.getMonth()
-
-    &&
-
-    tanggalTransaksi.getFullYear() === hariIni.getFullYear()
-
-){
-
-    omzetBulan += item.harga;
+    font-size:28px;
 
 }
 
-totalKomisi += item.komisi;
+/* FORM */
 
-            tableBody.innerHTML += `
-                <tr>
-                    <td>${item.tanggal}</td>
-                    <td>${item.karyawan}</td>
-                    <td>${item.treatment}</td>
-                    <td>${formatRupiah(item.harga)}</td>
-                    <td>${item.persen}%</td>
-                    <td>${formatRupiah(item.komisi)}</td>
-                </tr>
-            `;
+.form-section{
 
-        });
+    background:white;
 
-       document.getElementById("todaySales").innerHTML =
-    formatRupiah(omzetHari);
+    padding:20px;
 
-document.getElementById("monthSales").innerHTML =
-    formatRupiah(omzetBulan);
+    border-radius:12px;
 
-document.getElementById("totalCommission").innerHTML =
-    formatRupiah(totalKomisi);
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
 
-renderKomisiPerKaryawan(data);
+    margin-bottom:25px;
 
-}catch(error){
+}
 
-    console.error(error);
+.form-section h2{
+
+    margin-bottom:20px;
+
+    color:#d63384;
+
+}
+
+.input-group{
+
+    margin-bottom:18px;
+
+}
+
+.input-group label{
+
+    display:block;
+
+    margin-bottom:8px;
+
+    font-weight:bold;
+
+}
+
+.input-group input,
+
+.input-group select{
+
+    width:100%;
+
+    padding:12px;
+
+    border:1px solid #ddd;
+
+    border-radius:8px;
+
+    font-size:15px;
+
+}
+
+button{
+
+    width:100%;
+
+    background:#ff5fa2;
+
+    color:white;
+
+    border:none;
+
+    padding:14px;
+
+    border-radius:8px;
+
+    font-size:16px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+button:hover{
+
+    background:#ff3b8d;
+
+}
+
+/* HASIL */
+
+.hasil{
+
+    margin-bottom:25px;
+
+}
+
+.cardHasil{
+
+    background:white;
+
+    padding:20px;
+
+    border-radius:12px;
+
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+
+}
+
+.cardHasil p{
+
+    margin:10px 0;
+
+    font-size:17px;
+
+}
+
+/* TABLE */
+
+.table-section{
+
+    background:white;
+
+    padding:20px;
+
+    border-radius:12px;
+
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+
+}
+
+.table-section h2{
+
+    margin-bottom:20px;
+
+    color:#d63384;
+
+}
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+th{
+
+    background:#ffd6e7;
+
+    padding:12px;
+
+}
+
+td{
+
+    padding:10px;
+
+    border-bottom:1px solid #eee;
+
+    text-align:center;
+
+}
+
+/* RESPONSIVE */
+
+@media(max-width:700px){
+
+.card h3{
+
+font-size:22px;
+
+}
+
+table{
+
+font-size:12px;
+
+}
+
+button{
+
+font-size:15px;
 
 }
 
 }
 
-window.onload = function(){
+.toast{
 
-    document.getElementById("tanggal").valueAsDate = new Date();
+position:fixed;
 
-    loadData();
+top:20px;
 
-};
+right:20px;
+
+background:#ff69b4;
+
+color:white;
+
+padding:15px 25px;
+
+border-radius:10px;
+
+font-weight:bold;
+
+opacity:0;
+
+transition:.3s;
+
+z-index:9999;
+
+}
+
+.toast.show{
+
+opacity:1;
+
+}
+
+@media(max-width:768px){
+
+.container{
+
+padding:15px;
+
+}
+
+table{
+
+display:block;
+
+overflow-x:auto;
+
+white-space:nowrap;
+
+}
+
+.dashboard{
+
+display:grid;
+
+grid-template-columns:1fr;
+
+gap:15px;
+
+}
+
+button{
+
+width:100%;
+
+}
+
+input,
+select{
+
+width:100%;
+
+}
+
+}
