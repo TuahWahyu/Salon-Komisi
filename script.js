@@ -1,335 +1,297 @@
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Arial, Helvetica, sans-serif;
-}
+//==============================
+// MASTER DATA TREATMENT
+//==============================
+const API_URL="https://script.google.com/macros/s/AKfycbzP3HxF0FUADvYwrNEvwZwIvffYak8CNIGxlMwWX44Evip52C6743PuRw6mS_MiVZ0v3Q/exec";
 
-body{
-    background:#fff6fb;
-    color:#444;
-    padding:20px;
-}
+//==============================
 
-/* HEADER */
+const treatment = document.getElementById("treatment");
 
-header{
-    background:#ffd6e7;
-    padding:20px;
-    border-radius:12px;
-    text-align:center;
-    margin-bottom:20px;
-}
+const harga = document.getElementById("harga");
 
-header h1{
-    color:#d63384;
-    margin-bottom:8px;
-}
+const persen = document.getElementById("persen");
 
-header p{
-    color:#555;
-}
+const form = document.getElementById("transactionForm");
 
-/* DASHBOARD */
+const tableBody = document.getElementById("tableBody");
 
-.dashboard{
+//==============================
 
-    display:grid;
+let omzetHari = 0;
 
-    grid-template-columns:
-    repeat(auto-fit,minmax(220px,1fr));
+let omzetBulan = 0;
 
-    gap:15px;
+let totalKomisi = 0;
 
-    margin-bottom:25px;
+//==============================
 
-}
+//==============================
 
-.card{
+form.addEventListener("submit",function(e){
 
-    background:white;
+e.preventDefault();
 
-    border-radius:12px;
+const tanggal=document.getElementById("tanggal").value;
 
-    padding:20px;
+const nama=document.getElementById("karyawan").value;
 
-    box-shadow:0 3px 10px rgba(0,0,0,.08);
+const namaTreatment=treatment.value;
 
-    text-align:center;
+const nilaiHarga=parseInt(harga.value);
 
-}
+const nilaiPersen=parseFloat(persen.value);
 
-.card h2{
+const komisi=(nilaiHarga*nilaiPersen)/100;
 
-    font-size:18px;
+const transaksi={
 
-    margin-bottom:10px;
+tanggal:tanggal,
 
-    color:#d63384;
+karyawan:nama,
 
-}
+treatment:namaTreatment,
 
-.card h3{
+harga:nilaiHarga,
 
-    font-size:28px;
+persen:nilaiPersen,
 
-}
+komisi:komisi
 
-/* FORM */
+};
 
-.form-section{
+//==============================
 
-    background:white;
+document.getElementById("hasilNama").innerHTML=nama;
 
-    padding:20px;
+document.getElementById("hasilOmzet").innerHTML=formatRupiah(nilaiHarga);
 
-    border-radius:12px;
+document.getElementById("hasilKomisi").innerHTML=formatRupiah(komisi);
 
-    box-shadow:0 3px 10px rgba(0,0,0,.08);
+//==============================
 
-    margin-bottom:25px;
 
-}
 
-.form-section h2{
+//==============================
 
-    margin-bottom:20px;
+document.getElementById("todaySales").innerHTML=formatRupiah(omzetHari);
 
-    color:#d63384;
+document.getElementById("monthSales").innerHTML=formatRupiah(omzetBulan);
 
-}
+document.getElementById("totalCommission").innerHTML=formatRupiah(totalKomisi);
 
-.input-group{
+//==============================
 
-    margin-bottom:18px;
+const row=`
 
-}
+<tr>
 
-.input-group label{
+<td>${tanggal}</td>
 
-    display:block;
+<td>${nama}</td>
 
-    margin-bottom:8px;
+<td>${namaTreatment}</td>
 
-    font-weight:bold;
+<td>${formatRupiah(nilaiHarga)}</td>
 
-}
+<td>${nilaiPersen}%</td>
 
-.input-group input,
+<td>${formatRupiah(komisi)}</td>
 
-.input-group select{
+</tr>
 
-    width:100%;
+`;
 
-    padding:12px;
 
-    border:1px solid #ddd;
+fetch(API_URL,{
 
-    border-radius:8px;
+method:"POST",
 
-    font-size:15px;
+body:JSON.stringify(transaksi)
 
-}
+})
+.then(res=>res.json())
+.then(data=>{
 
-button{
+    form.reset();
 
-    width:100%;
+    document.getElementById("tanggal").valueAsDate = new Date();
 
-    background:#ff5fa2;
+    loadData();
 
-    color:white;
+    showToast();
 
-    border:none;
+});
 
-    padding:14px;
+});
 
-    border-radius:8px;
+//==============================
 
-    font-size:16px;
+function formatRupiah(angka){
 
-    cursor:pointer;
-
-    transition:.2s;
+return "Rp "+angka.toLocaleString("id-ID");
 
 }
 
-button:hover{
+function renderKomisiPerKaryawan(data){
 
-    background:#ff3b8d;
+    const komisiBody = document.getElementById("komisiBody");
 
-}
+    komisiBody.innerHTML = "";
 
-/* HASIL */
+    const rekap = {};
 
-.hasil{
+    data.forEach(item=>{
 
-    margin-bottom:25px;
+        if(!rekap[item.karyawan]){
 
-}
+            rekap[item.karyawan]=0;
 
-.cardHasil{
+        }
 
-    background:white;
+        rekap[item.karyawan]+=item.komisi;
 
-    padding:20px;
+    });
 
-    border-radius:12px;
+    Object.keys(rekap).forEach(nama=>{
 
-    box-shadow:0 3px 10px rgba(0,0,0,.08);
+        komisiBody.innerHTML+=`
 
-}
+        <tr>
 
-.cardHasil p{
+            <td>${nama}</td>
 
-    margin:10px 0;
+            <td>${formatRupiah(rekap[nama])}</td>
 
-    font-size:17px;
+        </tr>
 
-}
+        `;
 
-/* TABLE */
-
-.table-section{
-
-    background:white;
-
-    padding:20px;
-
-    border-radius:12px;
-
-    box-shadow:0 3px 10px rgba(0,0,0,.08);
+    });
 
 }
 
-.table-section h2{
+function showToast(){
 
-    margin-bottom:20px;
+    const toast = document.getElementById("toast");
 
-    color:#d63384;
+    toast.classList.add("show");
 
-}
+    setTimeout(()=>{
 
-table{
+        toast.classList.remove("show");
 
-    width:100%;
-
-    border-collapse:collapse;
+    },2000);
 
 }
 
-th{
+async function loadData(){
 
-    background:#ffd6e7;
+    try{
 
-    padding:12px;
+        const response = await fetch(API_URL);
 
-}
+        const result = await response.json();
 
-td{
+        const data = result.transaksi;
 
-    padding:10px;
+        const selectKaryawan = document.getElementById("karyawan");
 
-    border-bottom:1px solid #eee;
+selectKaryawan.innerHTML =
+'<option value="">Pilih Karyawan</option>';
 
-    text-align:center;
+result.karyawan.forEach(item=>{
 
-}
+    selectKaryawan.innerHTML +=
+    `<option value="${item.nama}">
+        ${item.nama}
+    </option>`;
 
-/* RESPONSIVE */
+});
 
-@media(max-width:700px){
+        tableBody.innerHTML = "";
 
-.card h3{
+        omzetHari = 0;
+        omzetBulan = 0;
+        totalKomisi = 0;
 
-font-size:22px;
+        data.forEach(item=>{
 
-}
+            const hariIni = new Date();
 
-table{
+const tanggalTransaksi = new Date(item.tanggal);
 
-font-size:12px;
+if (
+    tanggalTransaksi.toDateString() ===
+    hariIni.toDateString()
+){
 
-}
-
-button{
-
-font-size:15px;
-
-}
-
-}
-
-.toast{
-
-position:fixed;
-
-top:20px;
-
-right:20px;
-
-background:#ff69b4;
-
-color:white;
-
-padding:15px 25px;
-
-border-radius:10px;
-
-font-weight:bold;
-
-opacity:0;
-
-transition:.3s;
-
-z-index:9999;
+    omzetHari += item.harga;
 
 }
 
-.toast.show{
+if (
 
-opacity:1;
+    tanggalTransaksi.getMonth() === hariIni.getMonth()
 
-}
+    &&
 
-@media(max-width:768px){
+    tanggalTransaksi.getFullYear() === hariIni.getFullYear()
 
-.container{
+){
 
-padding:15px;
-
-}
-
-table{
-
-display:block;
-
-overflow-x:auto;
-
-white-space:nowrap;
+    omzetBulan += item.harga;
 
 }
 
-.dashboard{
+totalKomisi += item.komisi;
 
-display:grid;
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${formatTanggal(item.tanggal)}</td>
+                    <td>${item.karyawan}</td>
+                    <td>${item.treatment}</td>
+                    <td>${formatRupiah(item.harga)}</td>
+                    <td>${item.persen}%</td>
+                    <td>${formatRupiah(item.komisi)}</td>
+                    function formatTanggal(tanggal){
 
-grid-template-columns:1fr;
+    const t = new Date(tanggal);
 
-gap:15px;
+    return t.toLocaleDateString("id-ID",{
+        day:"2-digit",
+        month:"2-digit",
+        year:"numeric"
+    });
 
 }
+                </tr>
+            `;
 
-button{
+        });
 
-width:100%;
+       document.getElementById("todaySales").innerHTML =
+    formatRupiah(omzetHari);
 
-}
+document.getElementById("monthSales").innerHTML =
+    formatRupiah(omzetBulan);
 
-input,
-select{
+document.getElementById("totalCommission").innerHTML =
+    formatRupiah(totalKomisi);
 
-width:100%;
+renderKomisiPerKaryawan(data);
+
+}catch(error){
+
+    console.error(error);
 
 }
 
 }
+
+window.onload = function(){
+
+    document.getElementById("tanggal").valueAsDate = new Date();
+
+    loadData();
+
+};
