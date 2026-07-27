@@ -1,0 +1,260 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+    background:#fff6fb;
+    color:#444;
+    padding:20px;
+}
+
+/* HEADER */
+
+header{
+    background:#ffd6e7;
+    padding:20px;
+    border-radius:12px;
+    text-align:center;
+    margin-bottom:20px;
+}
+
+header h1{
+    color:#d63384;
+    margin-bottom:8px;
+}
+
+header p{
+    color:#555;
+}
+
+/* DASHBOARD */
+
+.dashboard{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(220px,1fr));
+
+    gap:15px;
+
+    margin-bottom:25px;
+
+}
+
+.card{
+
+    background:white;
+
+    border-radius:12px;
+
+    padding:20px;
+
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+
+    text-align:center;
+
+}
+
+.card h2{
+
+    font-size:18px;
+
+    margin-bottom:10px;
+
+    color:#d63384;
+
+}
+
+.card h3{
+
+    font-size:28px;
+
+}
+
+/* FORM */
+
+.form-section{
+
+    background:white;
+
+    padding:20px;
+
+    border-radius:12px;
+
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+
+    margin-bottom:25px;
+
+}
+
+.form-section h2{
+
+    margin-bottom:20px;
+
+    color:#d63384;
+
+}
+
+.input-group{
+
+    margin-bottom:18px;
+
+}
+
+.input-group label{
+
+    display:block;
+
+    margin-bottom:8px;
+
+    font-weight:bold;
+
+}
+
+.input-group input,
+
+.input-group select{
+
+    width:100%;
+
+    padding:12px;
+
+    border:1px solid #ddd;
+
+    border-radius:8px;
+
+    font-size:15px;
+
+}
+
+button{
+
+    width:100%;
+
+    background:#ff5fa2;
+
+    color:white;
+
+    border:none;
+
+    padding:14px;
+
+    border-radius:8px;
+
+    font-size:16px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+button:hover{
+
+    background:#ff3b8d;
+
+}
+
+/* HASIL */
+
+.hasil{
+
+    margin-bottom:25px;
+
+}
+
+.cardHasil{
+
+    background:white;
+
+    padding:20px;
+
+    border-radius:12px;
+
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+
+}
+
+.cardHasil p{
+
+    margin:10px 0;
+
+    font-size:17px;
+
+}
+
+/* TABLE */
+
+.table-section{
+
+    background:white;
+
+    padding:20px;
+
+    border-radius:12px;
+
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+
+}
+
+.table-section h2{
+
+    margin-bottom:20px;
+
+    color:#d63384;
+
+}
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+th{
+
+    background:#ffd6e7;
+
+    padding:12px;
+
+}
+
+td{
+
+    padding:10px;
+
+    border-bottom:1px solid #eee;
+
+    text-align:center;
+
+}
+
+/* RESPONSIVE */
+
+@media(max-width:700px){
+
+.card h3{
+
+font-size:22px;
+
+}
+
+table{
+
+font-size:12px;
+
+}
+
+button{
+
+font-size:15px;
+
+}
+
+}
