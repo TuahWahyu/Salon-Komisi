@@ -23,6 +23,10 @@ let omzetBulan = 0;
 
 let totalKomisi = 0;
 
+let chartKomisi;
+
+Chart.register(ChartDataLabels);
+
 //==============================
 
 //==============================
@@ -182,6 +186,118 @@ function renderKomisiPerKaryawan(data){
 
 }
 
+function renderChartKomisi(data){
+
+    const rekap = {};
+
+    data.forEach(item=>{
+
+        if(!rekap[item.karyawan]){
+
+            rekap[item.karyawan]=0;
+
+        }
+
+        rekap[item.karyawan]+=item.komisi;
+
+    });
+
+    const nama = Object.keys(rekap);
+
+    const komisi = Object.values(rekap);
+
+    if(chartKomisi){
+
+        chartKomisi.destroy();
+
+    }
+
+    const ctx=document.getElementById("komisiChart");
+
+    chartKomisi=new Chart(ctx,{
+
+        type:"pie",
+
+        data:{
+
+            labels:nama,
+
+            datasets:[{
+
+                data:komisi,
+
+                backgroundColor:[
+
+    "#FF6384", // Merah
+
+    "#36A2EB", // Biru
+
+    "#FFCE56", // Kuning
+
+    "#4BC0C0", // Hijau Tosca
+
+    "#9966FF", // Ungu
+
+    "#FF9F40", // Orange
+
+    "#2ECC71", // Hijau
+
+    "#E74C3C"  // Merah Tua
+
+],
+
+borderColor:"#ffffff",
+
+borderWidth:3
+
+            }]
+
+        },
+
+        options:{
+
+    responsive:true,
+
+    plugins:{
+
+        legend:{
+
+            position:"bottom"
+
+        },
+
+        datalabels:{
+
+            color:"#fff",
+
+            font:{
+
+                weight:"bold",
+
+                size:16
+
+            },
+
+            formatter:(value,context)=>{
+
+                const total=context.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
+
+                const persen=(value/total*100).toFixed(1);
+
+                return persen+"%";
+
+            }
+
+        }
+
+    }
+
+},
+plugins:[ChartDataLabels]
+    });
+
+}
+
 function showToast(){
 
     const toast = document.getElementById("toast");
@@ -267,6 +383,7 @@ totalKomisi += item.komisi;
                     <td>${formatRupiah(item.komisi)}</td>
                 </tr>
             `;
+
         });
 
        document.getElementById("todaySales").innerHTML =
@@ -279,6 +396,8 @@ document.getElementById("totalCommission").innerHTML =
     formatRupiah(totalKomisi);
 
 renderKomisiPerKaryawan(data);
+
+renderChartKomisi(data);
 
 }catch(error){
 
