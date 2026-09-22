@@ -1,252 +1,229 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Salon Commission Dashboard</title>
-
-    <link rel="stylesheet" href="style.css">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#d85b92" />
+  <title>Salon Commission Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-wrap">
+        <div class="brand-mark">✦</div>
+        <div>
+          <p class="eyebrow">SALON MANAGEMENT</p>
+          <h1>Commission Dashboard</h1>
+        </div>
+      </div>
 
-    <!-- HEADER -->
-
-    <header>
-
-        <h1>🌸 Salon Commission Dashboard</h1>
-
-        <p>
-            Dashboard Perhitungan Omzet & Komisi Karyawan
-        </p>
-
+      <div class="topbar-actions">
+        <div class="live-status"><span></span> Data tersinkron</div>
+        <div class="today-badge" id="todayLabel">--</div>
+      </div>
     </header>
 
-    <!-- DASHBOARD -->
-
-    <section class="dashboard">
-
-        <div class="card">
-
-            <h2>Omzet Hari Ini</h2>
-
-            <h3 id="todaySales">
-                Rp0
-            </h3>
-
+    <main>
+      <section class="hero-card">
+        <div class="hero-copy">
+          <p class="section-kicker">Ringkasan bisnis</p>
+          <h2>Pantau omzet dan komisi<br />tanpa hitung manual.</h2>
         </div>
-
-        <div class="card">
-
-            <h2>Omzet Bulan Ini</h2>
-
-            <h3 id="monthSales">
-                Rp0
-            </h3>
-
+        <div class="hero-badge">
+          <span class="hero-icon">◌</span>
+          <div>
+            <strong>Periode aktif</strong>
+            <small id="periodLabel">Bulan berjalan</small>
+          </div>
         </div>
+      </section>
 
-        <div class="card">
+      <section class="stats-grid" aria-label="Ringkasan omzet dan komisi">
+        <article class="stat-card stat-primary">
+          <div class="stat-icon">☀</div>
+          <div>
+            <p>Omzet Hari Ini</p>
+            <h3 id="todaySales">Rp0</h3>
+            <span id="todayHint">Transaksi hari ini</span>
+          </div>
+        </article>
 
-            <h2>Total Komisi</h2>
+        <article class="stat-card">
+          <div class="stat-icon">▣</div>
+          <div>
+            <p>Omzet Bulan Ini</p>
+            <h3 id="monthSales">Rp0</h3>
+            <span id="monthHint">Bulan berjalan</span>
+          </div>
+        </article>
 
-            <h3 id="totalCommission">
-                Rp0
-            </h3>
+        <article class="stat-card">
+          <div class="stat-icon">♡</div>
+          <div>
+            <p>Total Komisi</p>
+            <h3 id="totalCommission">Rp0</h3>
+            <span id="commissionHint">Seluruh transaksi</span>
+          </div>
+        </article>
 
-        </div>
+        <article class="stat-card">
+          <div class="stat-icon">✦</div>
+          <div>
+            <p>Total Transaksi</p>
+            <h3 id="totalTransactions">0</h3>
+            <span>Transaksi tersimpan</span>
+          </div>
+        </article>
+      </section>
 
-    </section>
+      <div class="content-grid top-grid">
+        <section class="panel form-panel" id="transaksi">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Input data</p>
+              <h2>Tambah Transaksi</h2>
+            </div>
+            <span class="panel-step">01</span>
+          </div>
 
-    <h2>Rekap Komisi Karyawan</h2>
+          <form id="transactionForm" autocomplete="off">
+            <div class="field-grid two-col">
+              <div class="input-group">
+                <label for="tanggal">Tanggal Transaksi</label>
+                <input type="date" id="tanggal" required />
+              </div>
 
-<table id="komisiTable">
-
-<thead>
-
-<tr>
-
-<th>Karyawan</th>
-
-<th>Total Komisi</th>
-
-</tr>
-
-</thead>
-
-<div class="card">
-
-    <h2>Distribusi Komisi Karyawan</h2>
-
-    <canvas id="komisiChart"></canvas>
-
-</div>
-
-<tbody id="komisiBody">
-
-</tbody>
-
-</table>
-
-    <!-- INPUT TRANSAKSI -->
-
-    <section class="form-section">
-
-        <h2>Input Transaksi</h2>
-
-        <form id="transactionForm">
-
-            <div class="input-group">
-
-    <label for="tanggal">Tanggal</label>
-
-    <input
-        type="date"
-        id="tanggal"
-        required>
-
-</div>
-
-            <div class="input-group">
-
-                <label>Nama Karyawan</label>
-
+              <div class="input-group">
+                <label for="karyawan">Nama Karyawan</label>
                 <select id="karyawan" required>
-    <option value="">Pilih Karyawan</option>
-</select>
-
+                  <option value="">Pilih Karyawan</option>
+                </select>
+              </div>
             </div>
 
             <div class="input-group">
-
-                <label>Nama Treatment</label>
-
-                
-                <input
-type="text"
-id="treatment"
-placeholder="Masukkan nama treatment"
-required>
-
+              <label for="treatment">Nama Treatment</label>
+              <input type="text" id="treatment" placeholder="Contoh: Hair Cut, Facial, Manicure" required />
             </div>
 
-            <div class="input-group">
+            <div class="field-grid two-col">
+              <div class="input-group">
+                <label for="harga">Harga Treatment</label>
+                <div class="input-prefix"><span>Rp</span><input type="number" id="harga" min="1" inputmode="numeric" placeholder="250000" required /></div>
+              </div>
 
-    <label for="harga">Harga Treatment</label>
+              <div class="input-group">
+                <label for="persen">Persentase Komisi</label>
+                <div class="input-suffix"><input type="number" id="persen" min="1" max="100" step="0.1" inputmode="decimal" placeholder="35" required /><span>%</span></div>
+              </div>
+            </div>
 
-    <input
-        type="number"
-        id="harga"
-        min="1"
-        placeholder="Masukkan harga treatment"
-        required>
+            <div class="estimate-box">
+              <div>
+                <span>Estimasi komisi</span>
+                <strong id="estimateCommission">Rp0</strong>
+              </div>
+              <div class="estimate-note" id="estimateNote">Isi harga dan persentase untuk melihat estimasi.</div>
+            </div>
 
-</div>
-
-<div class="input-group">
-
-    <label for="persen">Persentase Komisi (%)</label>
-
-    <input
-        type="number"
-        id="persen"
-        min="1"
-        max="100"
-        placeholder="Contoh: 35"
-        required>
-
-</div>
-
-            <button type="submit">
-
-                Simpan Transaksi
-
+            <button class="primary-button" id="submitButton" type="submit">
+              <span>Simpan Transaksi</span>
+              <span>→</span>
             </button>
+          </form>
+        </section>
 
-        </form>
+        <section class="panel chart-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Distribusi</p>
+              <h2>Komisi Karyawan</h2>
+            </div>
+            <span class="panel-step">02</span>
+          </div>
 
-    </section>
+          <div class="chart-wrap">
+            <canvas id="komisiChart"></canvas>
+            <div class="chart-empty" id="chartEmpty">Belum ada data komisi.</div>
+          </div>
 
-    <!-- HASIL KOMISI -->
+          <div class="summary-table-wrap">
+            <table class="summary-table">
+              <thead>
+                <tr>
+                  <th>Karyawan</th>
+                  <th>Komisi</th>
+                  <th>Porsi</th>
+                </tr>
+              </thead>
+              <tbody id="komisiBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
 
-    <section class="hasil">
+      <section class="panel result-panel" id="hasil">
+        <div class="result-left">
+          <div class="result-icon">✓</div>
+          <div>
+            <p class="section-kicker">Transaksi terakhir</p>
+            <h2>Hasil Perhitungan</h2>
+            <p class="muted">Ringkasan transaksi yang baru saja disimpan.</p>
+          </div>
+        </div>
+        <div class="result-values">
+          <div><span>Karyawan</span><strong id="hasilNama">-</strong></div>
+          <div><span>Omzet</span><strong id="hasilOmzet">Rp0</strong></div>
+          <div><span>Komisi</span><strong class="accent-text" id="hasilKomisi">Rp0</strong></div>
+        </div>
+      </section>
 
-        <h2>Hasil Perhitungan</h2>
-
-        <div class="cardHasil">
-
-            <p>
-                Nama :
-                <span id="hasilNama">-</span>
-            </p>
-
-            <p>
-                Omzet :
-                <span id="hasilOmzet">Rp0</span>
-            </p>
-
-            <p>
-                Komisi :
-                <span id="hasilKomisi">Rp0</span>
-            </p>
-
+      <section class="panel history-panel" id="riwayat">
+        <div class="panel-heading history-heading">
+          <div>
+            <p class="section-kicker">Data transaksi</p>
+            <h2>Riwayat Transaksi</h2>
+          </div>
+          <div class="history-tools">
+            <div class="search-box"><span>⌕</span><input type="search" id="searchInput" placeholder="Cari karyawan atau treatment..." /></div>
+            <span class="result-count" id="resultCount">0 transaksi</span>
+          </div>
         </div>
 
-    </section>
-
-    <!-- RIWAYAT -->
-
-    <section class="table-section">
-
-        <h2>Riwayat Transaksi</h2>
-
-        <table>
-
+        <div class="table-scroll">
+          <table class="history-table">
             <thead>
-
-                <tr>
-
-                    <th>Tanggal</th>
-
-                    <th>Karyawan</th>
-
-                    <th>Treatment</th>
-
-                    <th>Harga</th>
-
-                    <th>%</th>
-
-                    <th>Komisi</th>
-
-                </tr>
-
+              <tr>
+                <th>Tanggal</th>
+                <th>Karyawan</th>
+                <th>Treatment</th>
+                <th>Harga</th>
+                <th>%</th>
+                <th>Komisi</th>
+              </tr>
             </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+          <div class="table-empty" id="tableEmpty">Belum ada transaksi yang sesuai.</div>
+        </div>
+      </section>
+    </main>
 
-            <tbody id="tableBody">
+    <footer>
+      <span>Salon Commission Dashboard</span>
+      <span>•</span>
+      <span>Data tersimpan melalui Google Apps Script</span>
+    </footer>
+  </div>
 
-            </tbody>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-        </table>
-
-    </section>
-    <tbody id="komisiBody">
-
-    </tbody>
-
-</table>
-
-<div id="toast" class="toast">
-    ✅ Transaksi berhasil disimpan
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-
-<script src="script.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <script src="script.js"></script>
 </body>
 </html>
