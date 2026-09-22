@@ -1,416 +1,1145 @@
-//==============================
-// MASTER DATA TREATMENT
-//==============================
-const API_URL="https://script.google.com/macros/s/AKfycbzP3HxF0FUADvYwrNEvwZwIvffYak8CNIGxlMwWX44Evip52C6743PuRw6mS_MiVZ0v3Q/exec";
-
-//==============================
-
-const treatment = document.getElementById("treatment");
-
-const harga = document.getElementById("harga");
-
-const persen = document.getElementById("persen");
+const API_URL = "https://script.google.com/macros/s/AKfycbzP3HxF0FUADvYwrNEvwZwIvffYak8CNIGxlMwWX44Evip52C6743PuRw6mS_MiVZ0v3Q/exec";
 
 const form = document.getElementById("transactionForm");
-
 const tableBody = document.getElementById("tableBody");
+const searchInput = document.getElementById("searchInput");
+const submitButton = document.getElementById("submitButton");
 
-//==============================
+const hargaInput = document.getElementById("harga");
+const persenInput = document.getElementById("persen");
 
-let omzetHari = 0;
+const estimateCommission = document.getElementById("estimateCommission");
+const estimateNote = document.getElementById("estimateNote");
 
-let omzetBulan = 0;
+const chartEmpty = document.getElementById("chartEmpty");
+const toast = document.getElementById("toast");
 
-let totalKomisi = 0;
-
-let chartKomisi;
-
-Chart.register(ChartDataLabels);
-
-//==============================
-
-//==============================
-
-form.addEventListener("submit",function(e){
-
-e.preventDefault();
-
-const tanggal=document.getElementById("tanggal").value;
-
-const nama=document.getElementById("karyawan").value;
-
-const namaTreatment=treatment.value;
-
-const nilaiHarga=parseInt(harga.value);
-
-const nilaiPersen=parseFloat(persen.value);
-
-const komisi=(nilaiHarga*nilaiPersen)/100;
-
-const transaksi={
-
-tanggal:tanggal,
-
-karyawan:nama,
-
-treatment:namaTreatment,
-
-harga:nilaiHarga,
-
-persen:nilaiPersen,
-
-komisi:komisi
-
-};
-
-//==============================
-
-document.getElementById("hasilNama").innerHTML=nama;
-
-document.getElementById("hasilOmzet").innerHTML=formatRupiah(nilaiHarga);
-
-document.getElementById("hasilKomisi").innerHTML=formatRupiah(komisi);
-
-//==============================
+let allData = [];
+let chartKomisi = null;
 
 
+// ======================================================
+// FORMAT RUPIAH
+// ======================================================
 
-//==============================
+function formatRupiah(angka) {
 
-document.getElementById("todaySales").innerHTML=formatRupiah(omzetHari);
+    const value = Number(angka) || 0;
 
-document.getElementById("monthSales").innerHTML=formatRupiah(omzetBulan);
-
-document.getElementById("totalCommission").innerHTML=formatRupiah(totalKomisi);
-
-//==============================
-
-const row=`
-
-<tr>
-
-<td>${tanggal}</td>
-
-<td>${nama}</td>
-
-<td>${namaTreatment}</td>
-
-<td>${formatRupiah(nilaiHarga)}</td>
-
-<td>${nilaiPersen}%</td>
-
-<td>${formatRupiah(komisi)}</td>
-
-</tr>
-
-`;
-
-
-fetch(API_URL,{
-
-method:"POST",
-
-body:JSON.stringify(transaksi)
-
-})
-.then(res=>res.json())
-.then(data=>{
-
-    form.reset();
-
-    document.getElementById("tanggal").valueAsDate = new Date();
-
-    loadData();
-
-    showToast();
-
-});
-
-});
-
-//==============================
-
-function formatRupiah(angka){
-
-return "Rp "+angka.toLocaleString("id-ID");
+    return "Rp " + value.toLocaleString("id-ID");
 
 }
 
-function formatTanggal(tanggal){
 
-    const t = new Date(tanggal);
+// ======================================================
+// FORMAT ANGKA
+// ======================================================
 
-    return t.toLocaleString("id-ID",{
-        day:"2-digit",
-        month:"2-digit",
-        year:"numeric"
-    });
+function formatNumber(angka) {
+
+    return (Number(angka) || 0).toLocaleString("id-ID");
 
 }
 
-function renderKomisiPerKaryawan(data){
 
-    const komisiBody = document.getElementById("komisiBody");
+// ======================================================
+// FORMAT TANGGAL
+// ======================================================
 
-    komisiBody.innerHTML = "";
+function formatTanggal(tanggal) {
 
-    const rekap = {};
+    const t = parseApiDate(tanggal);
 
-    data.forEach(item=>{
+    if (!t || Number.isNaN(t.getTime())) {
+        return "-";
+    }
 
-        if(!rekap[item.karyawan]){
+    return t.toLocaleDateString("id-ID", {
 
-            rekap[item.karyawan]=0;
-
-        }
-
-        rekap[item.karyawan]+=item.komisi;
-
-    });
-
-    Object.keys(rekap).forEach(nama=>{
-
-        komisiBody.innerHTML+=`
-
-        <tr>
-
-            <td>${nama}</td>
-
-            <td>${formatRupiah(rekap[nama])}</td>
-
-        </tr>
-
-        `;
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
 
     });
 
 }
 
-function renderChartKomisi(data){
 
-    const rekap = {};
+// ======================================================
+// PARSE TANGGAL
+// ======================================================
 
-    data.forEach(item=>{
+function parseApiDate(value) {
 
-        if(!rekap[item.karyawan]){
+    if (!value) {
+        return null;
+    }
 
-            rekap[item.karyawan]=0;
+    if (value instanceof Date) {
+        return value;
+    }
 
-        }
+    const raw = String(value);
 
-        rekap[item.karyawan]+=item.komisi;
+    // Jika format YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
 
-    });
+        const [y, m, d] = raw
+            .split("-")
+            .map(Number);
 
-    const nama = Object.keys(rekap);
-
-    const komisi = Object.values(rekap);
-
-    if(chartKomisi){
-
-        chartKomisi.destroy();
+        return new Date(
+            y,
+            m - 1,
+            d
+        );
 
     }
 
-    const ctx=document.getElementById("komisiChart");
+    const d = new Date(raw);
 
-    chartKomisi=new Chart(ctx,{
-
-        type:"pie",
-
-        data:{
-
-            labels:nama,
-
-            datasets:[{
-
-                data:komisi,
-
-                backgroundColor:[
-
-    "#FF6384", // Merah
-
-    "#36A2EB", // Biru
-
-    "#FFCE56", // Kuning
-
-    "#4BC0C0", // Hijau Tosca
-
-    "#9966FF", // Ungu
-
-    "#FF9F40", // Orange
-
-    "#2ECC71", // Hijau
-
-    "#E74C3C"  // Merah Tua
-
-],
-
-borderColor:"#ffffff",
-
-borderWidth:3
-
-            }]
-
-        },
-
-        options:{
-
-    responsive:true,
-
-    plugins:{
-
-        legend:{
-
-            position:"bottom"
-
-        },
-
-        datalabels:{
-
-            color:"#fff",
-
-            font:{
-
-                weight:"bold",
-
-                size:16
-
-            },
-
-            formatter:(value,context)=>{
-
-                const total=context.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
-
-                const persen=(value/total*100).toFixed(1);
-
-                return persen+"%";
-
-            }
-
-        }
-
-    }
-
-},
-plugins:[ChartDataLabels]
-    });
+    return Number.isNaN(d.getTime())
+        ? null
+        : d;
 
 }
 
-function showToast(){
 
-    const toast = document.getElementById("toast");
+// ======================================================
+// KEY TANGGAL
+// ======================================================
 
-    toast.classList.add("show");
+function dateKey(date) {
 
-    setTimeout(()=>{
+    return [
 
-        toast.classList.remove("show");
+        date.getFullYear(),
 
-    },2000);
+        String(
+            date.getMonth() + 1
+        ).padStart(2, "0"),
 
-}
+        String(
+            date.getDate()
+        ).padStart(2, "0")
 
-async function loadData(){
-
-    try{
-
-        const response = await fetch(API_URL);
-
-        const result = await response.json();
-
-        const data = result.transaksi;
-
-        const selectKaryawan = document.getElementById("karyawan");
-
-selectKaryawan.innerHTML =
-'<option value="">Pilih Karyawan</option>';
-
-result.karyawan.forEach(item=>{
-
-    selectKaryawan.innerHTML +=
-    `<option value="${item.nama}">
-        ${item.nama}
-    </option>`;
-
-});
-
-        tableBody.innerHTML = "";
-
-        omzetHari = 0;
-        omzetBulan = 0;
-        totalKomisi = 0;
-
-        data.forEach(item=>{
-
-            const hariIni = new Date();
-
-const tanggalTransaksi = new Date(item.tanggal);
-
-if (
-    tanggalTransaksi.toDateString() ===
-    hariIni.toDateString()
-){
-
-    omzetHari += item.harga;
+    ].join("-");
 
 }
 
-if (
 
-    tanggalTransaksi.getMonth() === hariIni.getMonth()
+// ======================================================
+// TANGGAL HARI INI
+// ======================================================
 
-    &&
+function getCurrentDateKey() {
 
-    tanggalTransaksi.getFullYear() === hariIni.getFullYear()
-
-){
-
-    omzetBulan += item.harga;
+    return dateKey(
+        new Date()
+    );
 
 }
 
-totalKomisi += item.komisi;
 
-            tableBody.innerHTML += `
-                <tr>
-                    <td>${formatTanggal(item.tanggal)}</td>
-                    <td>${item.karyawan}</td>
-                    <td>${item.treatment}</td>
-                    <td>${formatRupiah(item.harga)}</td>
-                    <td>${item.persen}%</td>
-                    <td>${formatRupiah(item.komisi)}</td>
-                </tr>
-            `;
+// ======================================================
+// KEY BULAN
+// ======================================================
+
+function getMonthKey(date) {
+
+    return `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+    ).padStart(2, "0")}`;
+
+}
+
+
+// ======================================================
+// SET INFORMASI TANGGAL
+// ======================================================
+
+function setTodayUI() {
+
+    const now = new Date();
+
+    document.getElementById("tanggal").value =
+        dateKey(now);
+
+    document.getElementById("todayLabel").textContent =
+        now.toLocaleDateString("id-ID", {
+
+            weekday: "long",
+            day: "numeric",
+            month: "long"
 
         });
 
-       document.getElementById("todaySales").innerHTML =
-    formatRupiah(omzetHari);
+    document.getElementById("periodLabel").textContent =
+        now.toLocaleDateString("id-ID", {
 
-document.getElementById("monthSales").innerHTML =
-    formatRupiah(omzetBulan);
+            month: "long",
+            year: "numeric"
 
-document.getElementById("totalCommission").innerHTML =
-    formatRupiah(totalKomisi);
-
-renderKomisiPerKaryawan(data);
-
-renderChartKomisi(data);
-
-}catch(error){
-
-    console.error(error);
+        });
 
 }
 
+
+// ======================================================
+// ESTIMASI KOMISI
+// ======================================================
+
+function updateEstimate() {
+
+    const harga =
+        Number(hargaInput.value) || 0;
+
+    const persen =
+        Number(persenInput.value) || 0;
+
+    const komisi =
+        (harga * persen) / 100;
+
+    estimateCommission.textContent =
+        formatRupiah(komisi);
+
+    estimateNote.textContent =
+        harga && persen
+            ? `${persen}% dari ${formatRupiah(harga)}`
+            : "Isi harga dan persentase untuk melihat estimasi.";
+
 }
 
-window.onload = function(){
 
-    document.getElementById("tanggal").valueAsDate = new Date();
+// ======================================================
+// ESCAPE HTML
+// ======================================================
 
-    loadData();
+function escapeHtml(value) {
 
-};
+    return String(value ?? "")
+
+        .replaceAll("&", "&amp;")
+
+        .replaceAll("<", "&lt;")
+
+        .replaceAll(">", "&gt;")
+
+        .replaceAll('"', "&quot;")
+
+        .replaceAll("'", "&#039;");
+
+}
+
+
+// ======================================================
+// NOTIFIKASI
+// ======================================================
+
+function showToast(
+    message,
+    isError = false
+) {
+
+    toast.textContent = message;
+
+    toast.style.background =
+        isError
+            ? "#b53c55"
+            : "#292329";
+
+    toast.classList.add("show");
+
+    clearTimeout(showToast.timer);
+
+    showToast.timer = setTimeout(() => {
+
+        toast.classList.remove("show");
+
+    }, 2800);
+
+}
+
+
+// ======================================================
+// REKAP KOMISI PER KARYAWAN
+// ======================================================
+
+function getRecap(data) {
+
+    const recap = {};
+
+    data.forEach(item => {
+
+        const nama =
+            item.karyawan || "Tanpa Nama";
+
+        recap[nama] =
+            (recap[nama] || 0)
+            + (Number(item.komisi) || 0);
+
+    });
+
+    return Object.entries(recap)
+
+        .sort(
+            (a, b) =>
+                b[1] - a[1]
+        );
+
+}
+
+
+// ======================================================
+// RENDER TABEL KOMISI
+// ======================================================
+
+function renderSummary(data) {
+
+    const body =
+        document.getElementById("komisiBody");
+
+    const recap =
+        getRecap(data);
+
+    const total =
+        recap.reduce(
+            (sum, [, value]) =>
+                sum + value,
+            0
+        );
+
+    body.innerHTML =
+        recap.length
+
+            ? recap.map(
+                ([nama, value]) => {
+
+                    const share =
+                        total
+                            ? (value / total) * 100
+                            : 0;
+
+                    return `
+                    <tr>
+
+                        <td>
+                            ${escapeHtml(nama)}
+                        </td>
+
+                        <td>
+                            ${formatRupiah(value)}
+                        </td>
+
+                        <td>
+                            ${share.toFixed(1)}%
+                        </td>
+
+                    </tr>
+                    `;
+
+                }
+            ).join("")
+
+            : `
+            <tr>
+
+                <td
+                    colspan="3"
+                    style="
+                        text-align:center;
+                        color:#aa9ca5
+                    "
+                >
+                    Belum ada data
+                </td>
+
+            </tr>
+            `;
+
+}
+
+
+// ======================================================
+// RENDER CHART
+// ======================================================
+
+function renderChart(data) {
+
+    const recap =
+        getRecap(data);
+
+    const canvas =
+        document.getElementById("komisiChart");
+
+
+    // Hapus chart sebelumnya
+
+    if (chartKomisi) {
+
+        chartKomisi.destroy();
+
+        chartKomisi = null;
+
+    }
+
+
+    // Jika belum ada data
+
+    if (!recap.length) {
+
+        chartEmpty.classList.add("show");
+
+        return;
+
+    }
+
+    chartEmpty.classList.remove("show");
+
+
+    chartKomisi =
+        new Chart(canvas, {
+
+            type: "doughnut",
+
+            data: {
+
+                labels:
+                    recap.map(
+                        item => item[0]
+                    ),
+
+                datasets: [{
+
+                    data:
+                        recap.map(
+                            item => item[1]
+                        ),
+
+                    backgroundColor: [
+
+                        "#d85b92",
+                        "#e892b5",
+                        "#f4b8cf",
+                        "#b77aa2",
+                        "#e2c0d1",
+                        "#ca6e9c",
+                        "#a96f8d",
+                        "#f0d5e1"
+
+                    ],
+
+                    borderWidth: 4,
+
+                    borderColor:
+                        "#ffffff"
+
+                }]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                cutout: "62%",
+
+                plugins: {
+
+                    legend: {
+
+                        position: "bottom",
+
+                        labels: {
+
+                            boxWidth: 11,
+
+                            usePointStyle: true,
+
+                            pointStyle: "circle",
+
+                            padding: 15,
+
+                            font: {
+
+                                size: 11
+
+                            }
+
+                        }
+
+                    },
+
+                    datalabels: {
+
+                        color: "#fff",
+
+                        font: {
+
+                            weight: "700",
+
+                            size: 11
+
+                        },
+
+                        formatter(
+                            value,
+                            context
+                        ) {
+
+                            const sum =
+                                context.chart.data.datasets[0]
+                                .data
+                                .reduce(
+                                    (a, b) =>
+                                        a + b,
+                                    0
+                                );
+
+                            if (!sum) {
+                                return "";
+                            }
+
+                            const percentage =
+                                (value / sum) * 100;
+
+                            return percentage >= 5
+
+                                ? `${percentage.toFixed(0)}%`
+
+                                : "";
+
+                        }
+
+                    }
+
+                }
+
+            },
+
+            plugins: [
+
+                ChartDataLabels
+
+            ]
+
+        });
+
+}
+
+
+// ======================================================
+// FILTER DATA
+// ======================================================
+
+function filterData() {
+
+    const keyword =
+        searchInput.value
+            .trim()
+            .toLowerCase();
+
+
+    if (!keyword) {
+
+        return allData;
+
+    }
+
+
+    return allData.filter(item =>
+
+        String(
+            item.karyawan || ""
+        )
+            .toLowerCase()
+            .includes(keyword)
+
+        ||
+
+        String(
+            item.treatment || ""
+        )
+            .toLowerCase()
+            .includes(keyword)
+
+    );
+
+}
+
+
+// ======================================================
+// RENDER RIWAYAT
+// ======================================================
+
+function renderHistory(data) {
+
+    const filtered =
+        filterData();
+
+
+    document.getElementById(
+        "resultCount"
+    ).textContent =
+        `${filtered.length.toLocaleString("id-ID")} transaksi`;
+
+
+    tableBody.innerHTML =
+        filtered.map(item => `
+
+            <tr>
+
+                <td>
+                    ${formatTanggal(item.tanggal)}
+                </td>
+
+                <td>
+                    ${escapeHtml(item.karyawan)}
+                </td>
+
+                <td>
+                    ${escapeHtml(item.treatment)}
+                </td>
+
+                <td>
+                    ${formatRupiah(item.harga)}
+                </td>
+
+                <td>
+                    ${escapeHtml(item.persen)}%
+                </td>
+
+                <td>
+                    ${formatRupiah(item.komisi)}
+                </td>
+
+            </tr>
+
+        `).join("");
+
+
+    document
+        .getElementById("tableEmpty")
+        .classList.toggle(
+            "show",
+            filtered.length === 0
+        );
+
+}
+
+
+// ======================================================
+// UPDATE DASHBOARD
+// ======================================================
+
+function updateDashboard(data) {
+
+    const now = new Date();
+
+    const today =
+        getCurrentDateKey();
+
+    const month =
+        getMonthKey(now);
+
+
+    let omzetHari = 0;
+
+    let omzetBulan = 0;
+
+    let totalKomisi = 0;
+
+    let transaksiHariIni = 0;
+
+    let transaksiBulanIni = 0;
+
+
+    data.forEach(item => {
+
+        const t =
+            parseApiDate(item.tanggal);
+
+        const harga =
+            Number(item.harga) || 0;
+
+        const komisi =
+            Number(item.komisi) || 0;
+
+
+        totalKomisi +=
+            komisi;
+
+
+        if (!t) {
+            return;
+        }
+
+
+        // Hari ini
+
+        if (
+            dateKey(t) === today
+        ) {
+
+            omzetHari +=
+                harga;
+
+            transaksiHariIni +=
+                1;
+
+        }
+
+
+        // Bulan ini
+
+        if (
+            getMonthKey(t) === month
+        ) {
+
+            omzetBulan +=
+                harga;
+
+            transaksiBulanIni +=
+                1;
+
+        }
+
+    });
+
+
+    document.getElementById(
+        "todaySales"
+    ).textContent =
+        formatRupiah(
+            omzetHari
+        );
+
+
+    document.getElementById(
+        "monthSales"
+    ).textContent =
+        formatRupiah(
+            omzetBulan
+        );
+
+
+    document.getElementById(
+        "totalCommission"
+    ).textContent =
+        formatRupiah(
+            totalKomisi
+        );
+
+
+    document.getElementById(
+        "totalTransactions"
+    ).textContent =
+        formatNumber(
+            data.length
+        );
+
+
+    document.getElementById(
+        "todayHint"
+    ).textContent =
+        `${transaksiHariIni} transaksi hari ini`;
+
+
+    document.getElementById(
+        "monthHint"
+    ).textContent =
+        `${transaksiBulanIni} transaksi bulan ini`;
+
+}
+
+
+// ======================================================
+// POPULATE DROPDOWN KARYAWAN
+// ======================================================
+
+function populateEmployees(list) {
+
+    const select =
+        document.getElementById(
+            "karyawan"
+        );
+
+
+    select.innerHTML =
+        '<option value="">Pilih Karyawan</option>';
+
+
+    (list || []).forEach(item => {
+
+        const option =
+            document.createElement(
+                "option"
+            );
+
+        option.value =
+            item.nama;
+
+        option.textContent =
+            item.nama;
+
+        select.appendChild(
+            option
+        );
+
+    });
+
+}
+
+
+// ======================================================
+// LOAD DATA
+// ======================================================
+
+async function loadData() {
+
+    try {
+
+        const response =
+            await fetch(
+                API_URL,
+                {
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+
+        }
+
+
+        const result =
+            await response.json();
+
+
+        allData =
+            Array.isArray(
+                result.transaksi
+            )
+
+                ? result.transaksi
+
+                : [];
+
+
+        populateEmployees(
+            result.karyawan
+        );
+
+
+        updateDashboard(
+            allData
+        );
+
+
+        renderSummary(
+            allData
+        );
+
+
+        renderChart(
+            allData
+        );
+
+
+        renderHistory(
+            allData
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(
+            "Data belum dapat dimuat. Cek koneksi atau Apps Script.",
+            true
+        );
+
+    }
+
+}
+
+
+// ======================================================
+// SUBMIT TRANSAKSI
+// ======================================================
+
+form.addEventListener(
+    "submit",
+    async event => {
+
+        event.preventDefault();
+
+
+        const tanggal =
+            document.getElementById(
+                "tanggal"
+            ).value;
+
+
+        const nama =
+            document.getElementById(
+                "karyawan"
+            ).value;
+
+
+        const namaTreatment =
+            document.getElementById(
+                "treatment"
+            ).value.trim();
+
+
+        const nilaiHarga =
+            Number(
+                hargaInput.value
+            );
+
+
+        const nilaiPersen =
+            Number(
+                persenInput.value
+            );
+
+
+        const komisi =
+            (nilaiHarga * nilaiPersen) / 100;
+
+
+        // Validasi
+
+        if (
+            !tanggal
+            ||
+            !nama
+            ||
+            !namaTreatment
+            ||
+            !nilaiHarga
+            ||
+            !nilaiPersen
+        ) {
+
+            showToast(
+                "Lengkapi data transaksi terlebih dahulu.",
+                true
+            );
+
+            return;
+
+        }
+
+
+        const transaksi = {
+
+            tanggal,
+
+            karyawan:
+                nama,
+
+            treatment:
+                namaTreatment,
+
+            harga:
+                nilaiHarga,
+
+            persen:
+                nilaiPersen,
+
+            komisi:
+                komisi
+
+        };
+
+
+        // Disable tombol
+
+        submitButton.disabled =
+            true;
+
+
+        submitButton
+            .querySelector(
+                "span:first-child"
+            )
+            .textContent =
+            "Menyimpan...";
+
+
+        try {
+
+            const response =
+                await fetch(
+                    API_URL,
+                    {
+
+                        method: "POST",
+
+                        body:
+                            JSON.stringify(
+                                transaksi
+                            )
+
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `HTTP ${response.status}`
+                );
+
+            }
+
+
+            await response.json();
+
+
+            // Tampilkan hasil
+
+            document.getElementById(
+                "hasilNama"
+            ).textContent =
+                nama;
+
+
+            document.getElementById(
+                "hasilOmzet"
+            ).textContent =
+                formatRupiah(
+                    nilaiHarga
+                );
+
+
+            document.getElementById(
+                "hasilKomisi"
+            ).textContent =
+                formatRupiah(
+                    komisi
+                );
+
+
+            // Reset form
+
+            form.reset();
+
+
+            document.getElementById(
+                "tanggal"
+            ).value =
+                getCurrentDateKey();
+
+
+            updateEstimate();
+
+
+            // Load ulang data
+
+            await loadData();
+
+
+            // Notifikasi
+
+            showToast(
+                "Transaksi berhasil disimpan ✓"
+            );
+
+
+            // Scroll hasil
+
+            document.getElementById(
+                "hasil"
+            ).scrollIntoView({
+
+                behavior: "smooth",
+
+                block: "center"
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                error
+            );
+
+
+            showToast(
+                "Transaksi gagal disimpan. Periksa koneksi atau Apps Script.",
+                true
+            );
+
+
+        } finally {
+
+            submitButton.disabled =
+                false;
+
+
+            submitButton
+                .querySelector(
+                    "span:first-child"
+                )
+                .textContent =
+                "Simpan Transaksi";
+
+        }
+
+    }
+);
+
+
+// ======================================================
+// UPDATE ESTIMASI SAAT INPUT BERUBAH
+// ======================================================
+
+[
+    hargaInput,
+    persenInput
+
+].forEach(input => {
+
+    input.addEventListener(
+        "input",
+        updateEstimate
+    );
+
+});
+
+
+// ======================================================
+// SEARCH
+// ======================================================
+
+searchInput.addEventListener(
+    "input",
+    () => {
+
+        renderHistory(
+            allData
+        );
+
+    }
+);
+
+
+// ======================================================
+// INISIALISASI
+// ======================================================
+
+setTodayUI();
+
+updateEstimate();
+
+loadData();
